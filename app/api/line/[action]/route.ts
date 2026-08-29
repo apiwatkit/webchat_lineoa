@@ -85,7 +85,6 @@ async function handleWebhook(request: NextRequest) {
 }
 
 async function handleSend(request: NextRequest) {
-  //
   try {
     const body = await request.json();
 
