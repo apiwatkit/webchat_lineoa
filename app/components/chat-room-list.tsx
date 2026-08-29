@@ -54,11 +54,24 @@ export default function ChatRoomList({
         )}
 
         {roomList.map((room) => {
-          const lastMessage =
-            room.messages[room.messages.length - 1];
-
           const isSelected =
             selectedUserId === room.userId;
+
+          const lastMessage =
+            room.messages[room.messages.length - 1];
+          let lastMessageText = "";
+          
+          if (lastMessage?.type === "image") {
+            lastMessageText = "รูปภาพ";
+          } else if (lastMessage?.type === "video") {
+            lastMessageText = "วิดีโอ";
+          } else if (lastMessage?.type === "file") {
+            lastMessageText = "ไฟล์";
+          } else if (lastMessage?.type === "sticker") {
+            lastMessageText = "สติกเกอร์";
+          } else {
+            lastMessageText = lastMessage?.text ?? "";
+          }
 
           return (
             <div
@@ -128,7 +141,7 @@ export default function ChatRoomList({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {lastMessage.text}
+                    {lastMessageText}
                   </div>
                 )}
               </div>

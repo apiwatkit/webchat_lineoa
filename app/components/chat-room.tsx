@@ -104,6 +104,41 @@ export default function ChatRoom({
           const isAdmin =
             message.sender === "admin";
 
+          let messageContent = null;
+
+          if (message.type === "text") {
+            messageContent = (
+              <p>{message.text}</p>
+            );
+          } else if (message.type === "image" && message.imageUrl) {
+            messageContent = (
+            <img 
+              src={message.imageUrl} 
+              alt="LINE message"
+              width="150"
+            />
+            );
+          } else if (message.type === "video" && message.videoUrl) {
+            messageContent = (
+              <video
+                src={message.videoUrl}
+                controls
+                width="500"
+              />
+            );
+          } else if (message.type === "file" && message.fileUrl) {
+            messageContent = (
+              <a
+                href={message.fileUrl}
+                download={message.fileName}
+              >
+                {message.fileName ?? "Download file"}
+              </a>
+            );
+          } else if (message.type === "sticker") {
+            messageContent = `Sticker ${message.stickerId}`;
+          }
+
           return (
             <div
               key={`${message.timestamp}-${index}`}
@@ -151,7 +186,7 @@ export default function ChatRoom({
                     wordBreak: "break-word",
                   }}
                 >
-                  {message.text}
+                  {messageContent}
                 </div>
 
                 <div

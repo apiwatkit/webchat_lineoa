@@ -1,6 +1,19 @@
 export interface LineChatMessageInterface {
   userId: string;
-  text: string;
+  type: "text" | "image" | "video" | "file" | "sticker";
+
+  text?: string;
+
+  imageUrl?: string;
+
+  videoUrl?: string;
+
+  fileUrl?: string;
+  fileName?: string;
+
+  stickerPackageId?: string;
+  stickerId?: string;
+
   displayName?: string;
   pictureUrl?: string;
   timestamp: number;
