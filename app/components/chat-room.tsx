@@ -136,7 +136,7 @@ export default function ChatRoom({
               </a>
             );
           } else if (message.type === "sticker") {
-            messageContent = `Sticker ${message.stickerId}`;
+            messageContent = `สติกเกอร์`;
           }
 
           return (
