@@ -3,17 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "start:dev": "nodemon --legacy-watch --watch app --watch public --ext ts,tsx,js,jsx,json,css --exec \"next dev\"",
-    "build": "next build",
+    "dev": "next dev --webpack",
+    "start:dev": "nodemon --legacy-watch --watch app --watch public --ext ts,tsx,js,jsx,json,css --exec \"next dev --webpack\"",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@line/bot-sdk": "^11.2.0",
+    "mysql2": "^3.24.2",
     "next": "16.3.3",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sequelize": "^6.37.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

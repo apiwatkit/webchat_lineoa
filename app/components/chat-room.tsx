@@ -1,23 +1,53 @@
 "use client";
 
 import { LineChatRoomInterface } from "@/app/interface";
+import { useEffect, useRef } from "react";
 
 interface Props {
   room?: LineChatRoomInterface;
   text: string;
-  isSending: boolean;
+  isReplying: boolean;
 
   onChangeText: (text: string) => void;
-  onSendMessage: () => void;
+  onReplyMessage: () => void;
 }
 
 export default function ChatRoom({
   room,
   text,
-  isSending,
+  isReplying,
   onChangeText,
-  onSendMessage,
+  onReplyMessage,
 }: Props) {
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = messageContainerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    setTimeout(() => {
+      container.scrollTop = container.scrollHeight;
+    }, 100);
+  }, [room?.userId, room?.messages.length]);
+
+  if (!room) {
+    return (
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        Select room
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -79,8 +109,10 @@ export default function ChatRoom({
 
       {/* Messages */}
       <div
+        ref={messageContainerRef}
         style={{
           flex: 1,
+          minHeight: 0,
           padding: "20px",
           overflowY: "auto",
           background: "#f5f5f5",
@@ -103,6 +135,55 @@ export default function ChatRoom({
         {room?.messages.map((message, index) => {
           const isAdmin =
             message.sender === "admin";
+
+          let messageContent = null;
+
+          if (message.type === "text") {
+            messageContent = (
+              <p>{message.text}</p>
+            );
+          } else if (message.type === "image" && message.imageUrl) {
+            messageContent = (
+            <img 
+              src={message.imageUrl} 
+              alt="LINE message"
+              width="150"
+              onLoad={() => {
+                const container = messageContainerRef.current;
+
+                if (container) {
+                  container.scrollTop = container.scrollHeight;
+                }
+              }}
+            />
+            );
+          } else if (message.type === "video" && message.videoUrl) {
+            messageContent = (
+              <video
+                src={message.videoUrl}
+                controls
+                width="500"
+                onLoadedMetadata={() => {
+                  const container = messageContainerRef.current;
+
+                  if (container) {
+                    container.scrollTop = container.scrollHeight;
+                  }
+                }}
+              />
+            );
+          } else if (message.type === "file" && message.fileUrl) {
+            messageContent = (
+              <a
+                href={message.fileUrl}
+                download={message.fileName}
+              >
+                {message.fileName ?? "Download file"}
+              </a>
+            );
+          } else if (message.type === "sticker") {
+            messageContent = `สติกเกอร์`;
+          }
 
           return (
             <div
@@ -151,7 +232,7 @@ export default function ChatRoom({
                     wordBreak: "break-word",
                   }}
                 >
-                  {message.text}
+                  {messageContent}
                 </div>
 
                 <div
@@ -194,7 +275,7 @@ export default function ChatRoom({
               !event.shiftKey
             ) {
               event.preventDefault();
-              onSendMessage();
+              onReplyMessage();
             }
           }}
           disabled={!room}
@@ -213,14 +294,14 @@ export default function ChatRoom({
 
         <button
           type="button"
-          onClick={onSendMessage}
+          onClick={onReplyMessage}
           disabled={
             !room ||
             !text.trim() ||
-            isSending
+            isReplying
           }
         >
-          {isSending ? "Sending..." : "Send"}
+          {isReplying ? "Replying..." : "Reply"}
         </button>
       </div>
     </div>
