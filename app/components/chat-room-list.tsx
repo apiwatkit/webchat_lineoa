@@ -13,7 +13,7 @@ export default function ChatRoomList({
   selectedUserId,
   onSelectRoom,
 }: Props) {
-  const roomList = Object.values(rooms);
+  const roomList = Object.entries(rooms);
 
   return (
     <div
@@ -53,14 +53,15 @@ export default function ChatRoomList({
           </div>
         )}
 
-        {roomList.map((room) => {
+        {roomList.map(([userId, room]) => {
           const isSelected =
-            selectedUserId === room.userId;
+            selectedUserId === userId;
 
           const lastMessage =
             room.messages[room.messages.length - 1];
+
           let lastMessageText = "";
-          
+
           if (lastMessage?.type === "image") {
             lastMessageText = "รูปภาพ";
           } else if (lastMessage?.type === "video") {
@@ -75,8 +76,8 @@ export default function ChatRoomList({
 
           return (
             <div
-              key={room.userId}
-              onClick={() => onSelectRoom(room.userId)}
+              key={userId}
+              onClick={() => onSelectRoom(userId)}
               style={{
                 display: "flex",
                 gap: "12px",
@@ -127,7 +128,7 @@ export default function ChatRoomList({
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {room.displayName ?? room.userId}
+                  {room.displayName ?? userId}
                 </div>
 
                 {lastMessage && (

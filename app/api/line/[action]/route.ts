@@ -14,10 +14,10 @@ export async function POST(
 
   switch (action) {
     case "webhook":
-      return handleWebhook(request);
+      return handlePostWebhook(request);
 
-    case "send":
-      return handleSend(request);
+    case "reply":
+      return handlePostReply(request);
 
     default:
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(
   }
 }
 
-async function handleWebhook(request: NextRequest) {
+async function handlePostWebhook(request: NextRequest) {
   const body = await request.text();
 
   const signature = request.headers.get("x-line-signature");
@@ -84,7 +84,7 @@ async function handleWebhook(request: NextRequest) {
   });
 }
 
-async function handleSend(request: NextRequest) {
+async function handlePostReply(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -102,21 +102,82 @@ async function handleSend(request: NextRequest) {
       );
     }
 
-    await lineService.sendTextMessage(userId, text);
+    await lineService.replyUser(userId, text);
 
     return NextResponse.json({
       success: true,
     });
   } catch (error) {
-    console.error("Error send LINE message:", error);
+    console.error("Error reply LINE message:", error);
 
     return NextResponse.json(
       {
-        message: "Unable to send LINE message",
+        message: "Unable to reply LINE message",
       },
       {
         status: 500,
       },
     );
   }
+}
+
+export async function GET(
+  request: NextRequest,
+  context: {
+    params: Promise<{
+      action: string;
+    }>;
+  },
+) {
+  const { action } = await context.params;
+
+  switch (action) {
+    case "room":
+      return handleGetRoom(request);
+
+    case "message":
+      return handleGetMessage(request);
+
+    default:
+      return NextResponse.json(
+        {
+          message: "Not found",
+        },
+        {
+          status: 404,
+        },
+      );
+  }
+}
+
+async function handleGetRoom(request: NextRequest) {
+  const room = await lineService.getRoom();
+
+  return NextResponse.json({
+    success: true,
+    data: room,
+  });
+}
+
+async function handleGetMessage(request: NextRequest) {
+  const roomId = request.nextUrl.searchParams.get("roomId");
+
+  if (!roomId) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: "roomId is required",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  const messages = await lineService.getMessage(Number(roomId));
+
+  return NextResponse.json({
+    success: true,
+    data: messages,
+  });
 }

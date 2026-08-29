@@ -1,4 +1,6 @@
 export interface LineChatMessageInterface {
+  roomId?: number;
+
   userId: string;
   type: "text" | "image" | "video" | "file" | "sticker";
 
@@ -21,8 +23,28 @@ export interface LineChatMessageInterface {
 }
 
 export interface LineChatRoomInterface {
+  id: number;
   userId: string;
   displayName?: string;
   pictureUrl?: string;
   messages: LineChatMessageInterface[];
+}
+
+export interface CreateLineChatMessageInterface {
+  roomId: number;
+
+  messageType: "text" | "image" | "video" | "file" | "sticker";
+
+  textContent?: string;
+  mediaUrl?: string;
+  fileName?: string;
+
+  stickerPackageId?: string;
+  stickerId?: string;
+
+  sender: "user" | "admin";
+
+  lineMessageId?: string;
+
+  messageTimestamp: number;
 }

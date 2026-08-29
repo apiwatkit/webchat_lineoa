@@ -19,7 +19,7 @@ export default function Home() {
     useState("");
 
   const [text, setText] = useState("");
-  const [isSending, setIsSending] =
+  const [isReplying, setIsReplying] =
     useState(false);
 
   const selectedRoom = useMemo(() => {
@@ -30,16 +30,181 @@ export default function Home() {
     return rooms[selectedUserId];
   }, [rooms, selectedUserId]);
 
+  async function getRooms() {
+    const response = await fetch("/api/line/room");
+
+    if (!response.ok) {
+      return;
+    }
+
+    const result = await response.json();
+
+    const roomMap: Record<
+      string,
+      LineChatRoomInterface
+    > = {};
+
+    for (const room of result.data) {
+      const messages: LineChatMessageInterface[] = [];
+
+      if (room.latestMessage) {
+        const latestMessage =
+          room.latestMessage;
+
+        const message: LineChatMessageInterface = {
+          roomId: room.id,
+          userId: room.userId,
+          type: latestMessage.messageType,
+          sender: latestMessage.sender,
+          timestamp: Number(
+            latestMessage.messageTimestamp,
+          ),
+        };
+
+        if (latestMessage.messageType === "text") {
+          message.text =
+            latestMessage.textContent;
+        } else if (
+          latestMessage.messageType === "image"
+        ) {
+          message.imageUrl =
+            latestMessage.mediaUrl;
+        } else if (
+          latestMessage.messageType === "video"
+        ) {
+          message.videoUrl =
+            latestMessage.mediaUrl;
+        } else if (
+          latestMessage.messageType === "file"
+        ) {
+          message.fileUrl =
+            latestMessage.mediaUrl;
+          message.fileName =
+            latestMessage.fileName;
+        } else if (
+          latestMessage.messageType === "sticker"
+        ) {
+          message.stickerPackageId =
+            latestMessage.stickerPackageId;
+          message.stickerId =
+            latestMessage.stickerId;
+        }
+
+        messages.push(message);
+      }
+
+      roomMap[room.userId] = {
+        id: room.id,
+        userId: room.userId,
+        displayName: room.displayName,
+        pictureUrl: room.pictureUrl,
+        messages,
+      };
+    }
+
+    setRooms(roomMap);
+  }
+
+  async function handleSelectRoom(
+    userId: string,
+  ) {
+    setSelectedUserId(userId);
+
+    const room = rooms[userId];
+
+    if (!room) {
+      return;
+    }
+
+    await getMessages(
+      userId,
+      room.id,
+    );
+  }
+
+  async function getMessages(
+    userId: string,
+    roomId: number,
+  ) {
+    const response = await fetch(
+      `/api/line/message?roomId=${roomId}`,
+    );
+
+    if (!response.ok) {
+      return;
+    }
+
+    const result = await response.json();
+
+    const messages: LineChatMessageInterface[] =
+      result.data.map(
+        (message: any) => {
+          const data: LineChatMessageInterface = {
+            userId,
+            type: message.messageType,
+            timestamp: Number(
+              message.messageTimestamp,
+            ),
+            sender: message.sender,
+          };
+
+          if (message.messageType === "text") {
+            data.text = message.textContent;
+          } else if (
+            message.messageType === "image"
+          ) {
+            data.imageUrl = message.mediaUrl;
+          } else if (
+            message.messageType === "video"
+          ) {
+            data.videoUrl = message.mediaUrl;
+          } else if (
+            message.messageType === "file"
+          ) {
+            data.fileUrl = message.mediaUrl;
+            data.fileName = message.fileName;
+          } else if (
+            message.messageType === "sticker"
+          ) {
+            data.stickerPackageId =
+              message.stickerPackageId;
+
+            data.stickerId =
+              message.stickerId;
+          }
+
+          return data;
+        },
+      );
+
+    setRooms((current) => {
+      const room = current[userId];
+
+      if (!room) {
+        return current;
+      }
+
+      return {
+        ...current,
+
+        [userId]: {
+          ...room,
+          messages,
+        },
+      };
+    });
+  }
+
   useEffect(() => {
+    getRooms();
+
     const eventSource = new EventSource(
       "/api/line/events",
     );
 
     eventSource.onmessage = (event) => {
       const message =
-        JSON.parse(
-          event.data,
-        ) as LineChatMessageInterface;
+        JSON.parse(event.data) as LineChatMessageInterface;
 
       setRooms((current) => {
         const room = current[message.userId];
@@ -48,6 +213,7 @@ export default function Home() {
           ...current,
 
           [message.userId]: {
+            id: room?.id ?? message.roomId!,
             userId: message.userId,
 
             displayName:
@@ -65,10 +231,6 @@ export default function Home() {
           },
         };
       });
-
-      setSelectedUserId((current) => {
-        return current || message.userId;
-      });
     };
 
     return () => {
@@ -76,11 +238,11 @@ export default function Home() {
     };
   }, []);
 
-  async function sendMessage() {
+  async function replyMessage() {
     if (
       !selectedUserId ||
       !text.trim() ||
-      isSending
+      isReplying
     ) {
       return;
     }
@@ -88,10 +250,10 @@ export default function Home() {
     const messageText = text.trim();
 
     try {
-      setIsSending(true);
+      setIsReplying(true);
 
       const response = await fetch(
-        "/api/line/send",
+        "/api/line/reply",
         {
           method: "POST",
           headers: {
@@ -112,6 +274,7 @@ export default function Home() {
       const message: LineChatMessageInterface =
         {
           userId: selectedUserId,
+          type: "text",
           text: messageText,
           timestamp: Date.now(),
           sender: "admin",
@@ -141,7 +304,7 @@ export default function Home() {
 
       setText("");
     } finally {
-      setIsSending(false);
+      setIsReplying(false);
     }
   }
 
@@ -160,15 +323,15 @@ export default function Home() {
       <ChatRoomList
         rooms={rooms}
         selectedUserId={selectedUserId}
-        onSelectRoom={setSelectedUserId}
+        onSelectRoom={handleSelectRoom}
       />
 
       <ChatRoom
         room={selectedRoom}
         text={text}
-        isSending={isSending}
+        isReplying={isReplying}
         onChangeText={setText}
-        onSendMessage={sendMessage}
+        onReplyMessage={replyMessage}
       />
     </main>
   );
