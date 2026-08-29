@@ -1,8 +1,20 @@
 services:
-  web:
-    build: .
+  webchat-lineoa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
     image: webchat-lineoa
+
     ports:
-      - "3000:3000"
+      - "${PORT}:${PORT}"
+
     env_file:
       - .env
+
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+    command: npm run start:dev
