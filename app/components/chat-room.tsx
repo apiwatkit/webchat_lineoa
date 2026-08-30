@@ -56,7 +56,6 @@ export default function ChatRoom({
         flexDirection: "column",
       }}
     >
-      {/* Header */}
       <div
         style={{
           height: "72px",
@@ -107,7 +106,6 @@ export default function ChatRoom({
         )}
       </div>
 
-      {/* Messages */}
       <div
         ref={messageContainerRef}
         style={{
@@ -255,7 +253,6 @@ export default function ChatRoom({
         })}
       </div>
 
-      {/* Input */}
       <div
         style={{
           display: "flex",

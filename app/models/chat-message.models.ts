@@ -13,7 +13,7 @@ export class ChatMessageModel extends Model<
   InferCreationAttributes<ChatMessageModel>
 > {
   declare id: CreationOptional<number>;
-  declare roomId: number;
+  declare userId: string;
 
   declare messageType: "text" | "image" | "video" | "file" | "sticker";
 
@@ -32,15 +32,16 @@ export class ChatMessageModel extends Model<
 ChatMessageModel.init(
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
 
-    roomId: {
-      type: DataTypes.BIGINT,
+    userId: {
+      type: DataTypes.STRING(100),
       allowNull: false,
-      field: "room_id",
+      unique: true,
+      field: "user_id",
     },
 
     messageType: {

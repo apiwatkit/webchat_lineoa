@@ -25,7 +25,7 @@ export class ChatRoomModel extends Model<
 ChatRoomModel.init(
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },

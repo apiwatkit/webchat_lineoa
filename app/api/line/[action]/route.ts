@@ -160,13 +160,13 @@ async function handleGetRoom(request: NextRequest) {
 }
 
 async function handleGetMessage(request: NextRequest) {
-  const roomId = request.nextUrl.searchParams.get("roomId");
+  const userId = request.nextUrl.searchParams.get("userId");
 
-  if (!roomId) {
+  if (!userId) {
     return NextResponse.json(
       {
         success: false,
-        message: "roomId is required",
+        message: "userId is required",
       },
       {
         status: 400,
@@ -174,7 +174,7 @@ async function handleGetMessage(request: NextRequest) {
     );
   }
 
-  const messages = await lineService.getMessage(Number(roomId));
+  const messages = await lineService.getMessage(userId);
 
   return NextResponse.json({
     success: true,

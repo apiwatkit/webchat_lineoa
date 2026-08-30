@@ -4,7 +4,7 @@ import { ChatMessageModel } from "../models";
 export class ChatMessageRepository {
   async create(data: CreateLineChatMessageInterface) {
     return ChatMessageModel.create({
-      roomId: data.roomId,
+      userId: data.userId,
       messageType: data.messageType,
 
       textContent: data.textContent ?? null,
@@ -22,20 +22,20 @@ export class ChatMessageRepository {
     });
   }
 
-  async findByRoomId(roomId: number) {
+  async findByUserId(userId: string) {
     return ChatMessageModel.findAll({
       where: {
-        roomId,
+        userId,
       },
       order: [["messageTimestamp", "ASC"]],
       raw: true,
     });
   }
 
-  async findLatestByRoomId(roomId: number) {
+  async findLatestByUserId(userId: string) {
     return ChatMessageModel.findOne({
       where: {
-        roomId,
+        userId,
       },
       order: [["messageTimestamp", "DESC"]],
       raw: true,

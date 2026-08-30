@@ -52,7 +52,6 @@ export default function Home() {
           room.latestMessage;
 
         const message: LineChatMessageInterface = {
-          roomId: room.id,
           userId: room.userId,
           type: latestMessage.messageType,
           sender: latestMessage.sender,
@@ -94,7 +93,6 @@ export default function Home() {
       }
 
       roomMap[room.userId] = {
-        id: room.id,
         userId: room.userId,
         displayName: room.displayName,
         pictureUrl: room.pictureUrl,
@@ -116,18 +114,14 @@ export default function Home() {
       return;
     }
 
-    await getMessages(
-      userId,
-      room.id,
-    );
+    await getMessages(userId);
   }
 
   async function getMessages(
     userId: string,
-    roomId: number,
   ) {
     const response = await fetch(
-      `/api/line/message?roomId=${roomId}`,
+      `/api/line/message?userId=${userId}`,
     );
 
     if (!response.ok) {
@@ -194,49 +188,6 @@ export default function Home() {
       };
     });
   }
-
-  useEffect(() => {
-    getRooms();
-
-    const eventSource = new EventSource(
-      "/api/line/events",
-    );
-
-    eventSource.onmessage = (event) => {
-      const message =
-        JSON.parse(event.data) as LineChatMessageInterface;
-
-      setRooms((current) => {
-        const room = current[message.userId];
-
-        return {
-          ...current,
-
-          [message.userId]: {
-            id: room?.id ?? message.roomId!,
-            userId: message.userId,
-
-            displayName:
-              message.displayName ??
-              room?.displayName,
-
-            pictureUrl:
-              message.pictureUrl ??
-              room?.pictureUrl,
-
-            messages: [
-              ...(room?.messages ?? []),
-              message,
-            ],
-          },
-        };
-      });
-    };
-
-    return () => {
-      eventSource.close();
-    };
-  }, []);
 
   async function replyMessage() {
     if (
@@ -307,6 +258,47 @@ export default function Home() {
       setIsReplying(false);
     }
   }
+
+  useEffect(() => {
+    getRooms();
+
+    const eventSource = new EventSource(
+      "/api/line/events",
+    );
+
+    eventSource.onmessage = (event) => {
+      const message =
+        JSON.parse(event.data) as LineChatMessageInterface;
+
+      setRooms((current) => {
+        const room = current[message.userId];
+
+        return {
+          ...current,
+
+          [message.userId]: {
+            userId: message.userId,
+
+            displayName:
+              message.displayName,
+
+            pictureUrl:
+              message.pictureUrl ??
+              room?.pictureUrl,
+
+            messages: [
+              ...(room?.messages ?? []),
+              message,
+            ],
+          },
+        };
+      });
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   return (
     <main
