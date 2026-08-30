@@ -1,7 +1,10 @@
 import { Sequelize } from "sequelize";
+import mysql2 from "mysql2";
 
 export const sequelize = new Sequelize({
   dialect: "mysql",
+
+  dialectModule: mysql2,
 
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
