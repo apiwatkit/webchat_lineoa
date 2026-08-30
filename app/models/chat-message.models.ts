@@ -32,7 +32,7 @@ export class ChatMessageModel extends Model<
 ChatMessageModel.init(
   {
     id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
     },
