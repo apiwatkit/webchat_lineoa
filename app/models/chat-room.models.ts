@@ -4,9 +4,11 @@ import {
   InferAttributes,
   InferCreationAttributes,
   CreationOptional,
+  NonAttribute,
 } from "sequelize";
 
 import { sequelize } from "@/app/database/database";
+import { ChatMessageModel } from "./chat-message.models";
 
 export class ChatRoomModel extends Model<
   InferAttributes<ChatRoomModel>,
@@ -20,6 +22,8 @@ export class ChatRoomModel extends Model<
 
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
+
+  declare messages?: NonAttribute<ChatMessageModel[]>;
 }
 
 ChatRoomModel.init(
@@ -67,3 +71,9 @@ ChatRoomModel.init(
     timestamps: true,
   },
 );
+
+ChatRoomModel.hasMany(ChatMessageModel, {
+  sourceKey: "userId",
+  foreignKey: "userId",
+  as: "messages",
+});

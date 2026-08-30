@@ -40,7 +40,7 @@ ChatMessageModel.init(
     userId: {
       type: DataTypes.STRING(100),
       allowNull: false,
-      unique: true,
+      unique: false,
       field: "user_id",
     },
 
