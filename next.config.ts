@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   logging: {
     incomingRequests: false,
   },
-  serverExternalPackages: ["sequelize"],
+  serverExternalPackages: ["sequelize", "mysql2"],
 };
 
 export default nextConfig;
