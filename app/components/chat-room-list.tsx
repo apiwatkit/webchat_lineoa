@@ -5,6 +5,7 @@ import { LineChatRoomInterface } from "@/app/interface";
 interface Props {
   rooms: Record<string, LineChatRoomInterface>;
   selectedUserId: string;
+  
   onSelectRoom: (userId: string) => void;
 }
 

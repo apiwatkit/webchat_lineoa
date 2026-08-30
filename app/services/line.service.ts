@@ -116,14 +116,8 @@ class LineService {
 
     const baseData: Pick<
       LineChatMessageInterface,
-      | "roomId"
-      | "userId"
-      | "displayName"
-      | "pictureUrl"
-      | "timestamp"
-      | "sender"
+      "userId" | "displayName" | "pictureUrl" | "timestamp" | "sender"
     > = {
-      roomId: room.id,
       userId,
       displayName: profile?.displayName,
       pictureUrl: profile?.pictureUrl,
@@ -189,7 +183,7 @@ class LineService {
       return;
     }
 
-    await this.saveMessage(room.id, dataEmit, event.message.id);
+    await this.saveMessage(room.userId, dataEmit, event.message.id);
 
     lineEmitter.emit("message", dataEmit);
   }
@@ -222,7 +216,6 @@ class LineService {
     }
 
     const message: LineChatMessageInterface = {
-      roomId: room.id,
       userId,
       type: "text",
       text,
@@ -230,7 +223,7 @@ class LineService {
       sender: "admin",
     };
 
-    await this.saveMessage(room.id, message);
+    await this.saveMessage(room.userId, message);
   }
 
   private async createRoom(
@@ -252,12 +245,12 @@ class LineService {
   }
 
   private async saveMessage(
-    roomId: number,
+    userId: string,
     data: LineChatMessageInterface,
     lineMessageId?: string,
   ) {
     await this.chatMessageRepository.create({
-      roomId,
+      userId,
       messageType: data.type,
       textContent: data.text,
       mediaUrl: data.imageUrl ?? data.videoUrl ?? data.fileUrl,
@@ -276,8 +269,8 @@ class LineService {
     const allRoom = await this.chatRoomRepository.findAll();
 
     for (const room of allRoom) {
-      const latestMessage = await this.chatMessageRepository.findLatestByRoomId(
-        room.id,
+      const latestMessage = await this.chatMessageRepository.findLatestByUserId(
+        room.userId,
       );
 
       result.push({
@@ -289,8 +282,8 @@ class LineService {
     return result;
   }
 
-  async getMessage(roomId: number) {
-    const message = await this.chatMessageRepository.findByRoomId(roomId);
+  async getMessage(userId: string) {
+    const message = await this.chatMessageRepository.findByUserId(userId);
 
     return message;
   }
