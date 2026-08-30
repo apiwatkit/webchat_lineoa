@@ -269,13 +269,11 @@ class LineService {
     const allRoom = await this.chatRoomRepository.findAll();
 
     for (const room of allRoom) {
-      const latestMessage = await this.chatMessageRepository.findLatestByUserId(
-        room.userId,
-      );
+      const data = room.toJSON();
 
       result.push({
-        ...room,
-        latestMessage,
+        ...data,
+        latestMessage: room.messages?.[0] ?? null,
       });
     }
 

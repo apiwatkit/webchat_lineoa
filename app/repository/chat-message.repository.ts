@@ -31,14 +31,4 @@ export class ChatMessageRepository {
       raw: true,
     });
   }
-
-  async findLatestByUserId(userId: string) {
-    return ChatMessageModel.findOne({
-      where: {
-        userId,
-      },
-      order: [["messageTimestamp", "DESC"]],
-      raw: true,
-    });
-  }
 }

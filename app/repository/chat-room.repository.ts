@@ -1,4 +1,4 @@
-import { ChatRoomModel } from "../models";
+import { ChatMessageModel, ChatRoomModel } from "../models";
 
 export class ChatRoomRepository {
   async findByUserId(userId: string) {
@@ -20,8 +20,16 @@ export class ChatRoomRepository {
 
   async findAll() {
     return ChatRoomModel.findAll({
+      include: [
+        {
+          model: ChatMessageModel,
+          as: "messages",
+          separate: true,
+          limit: 1,
+          order: [["messageTimestamp", "DESC"]],
+        },
+      ],
       order: [["updatedAt", "DESC"]],
-      raw: true,
     });
   }
 }
