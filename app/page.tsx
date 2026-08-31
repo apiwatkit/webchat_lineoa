@@ -222,37 +222,6 @@ export default function Home() {
         return;
       }
 
-      const message: LineChatMessageInterface =
-        {
-          userId: selectedUserId,
-          type: "text",
-          text: messageText,
-          timestamp: Date.now(),
-          sender: "admin",
-        };
-
-      setRooms((current) => {
-        const room =
-          current[selectedUserId];
-
-        if (!room) {
-          return current;
-        }
-
-        return {
-          ...current,
-
-          [selectedUserId]: {
-            ...room,
-
-            messages: [
-              ...room.messages,
-              message,
-            ],
-          },
-        };
-      });
-
       setText("");
     } finally {
       setIsReplying(false);
