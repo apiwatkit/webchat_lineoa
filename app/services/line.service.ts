@@ -183,8 +183,12 @@ class LineService {
     );
 
     console.log(
-      "subscriberCount chat-message",
-      JSON.stringify(dataEmit).substring(0, 500),
+      "REDIS PUBLISHED",
+      dataEmit.type,
+      "subscribers:",
+      subscriberCount,
+      "bytes:",
+      Buffer.byteLength(JSON.stringify(dataEmit), "utf8"),
     );
   }
 

@@ -22,13 +22,10 @@ export async function GET() {
 
       await subscriber.subscribe("chat-message", (message) => {
         console.log(
-          "subscriber chat-message",
-          JSON.stringify(message).substring(0, 500),
+          "REDIS RECEIVED",
+          "bytes:",
+          Buffer.byteLength(message, "utf8"),
         );
-
-        const data = `data: ${message}\n\n`;
-
-        console.log("SSE BEFORE ENQUEUE", Buffer.byteLength(data, "utf8"));
 
         controller.enqueue(encoder.encode(`data: ${message}\n\n`));
 
