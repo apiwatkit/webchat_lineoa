@@ -5,6 +5,7 @@ import { LineChatRoomInterface } from "@/app/interface";
 interface Props {
   rooms: Record<string, LineChatRoomInterface>;
   selectedUserId: string;
+  isLoading: boolean;
   
   onSelectRoom: (userId: string) => void;
 }
@@ -12,6 +13,7 @@ interface Props {
 export default function ChatRoomList({
   rooms,
   selectedUserId,
+  isLoading,
   onSelectRoom,
 }: Props) {
   const roomList = Object.entries(rooms);
@@ -41,16 +43,33 @@ export default function ChatRoomList({
           flex: 1,
           overflowY: "auto",
         }}
-      >
+      > 
         {roomList.length === 0 && (
           <div
             style={{
               padding: "20px",
               textAlign: "center",
               color: "#888",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "10px",
             }}
           >
-            Waiting for LINE message...
+            {isLoading && (
+              <div
+                className="loading-spinner"
+                style={{
+                  width: "24px",
+                  height: "24px",
+                  border: "3px solid #ddd",
+                  borderTopColor: "#555",
+                  borderRadius: "50%",
+                }}
+              />
+            )}
+
+            <div>Waiting for LINE message...</div>
           </div>
         )}
 

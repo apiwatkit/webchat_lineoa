@@ -14,13 +14,11 @@ export default function Home() {
   const [rooms, setRooms] = useState<
     Record<string, LineChatRoomInterface>
   >({});
-
   const [selectedUserId, setSelectedUserId] =
     useState("");
-
   const [text, setText] = useState("");
-  const [isReplying, setIsReplying] =
-    useState(false);
+  const [isRoomListLoading, setIsRoomListLoading] = useState(false);
+  const [isChatRoomLoading, setIsChatRoomLoading] = useState(false);
 
   const selectedRoom = useMemo(() => {
     if (!selectedUserId) {
@@ -31,76 +29,84 @@ export default function Home() {
   }, [rooms, selectedUserId]);
 
   async function getRooms() {
-    const response = await fetch("/api/line/room");
+    try {
+      setIsRoomListLoading(true);
 
-    if (!response.ok) {
-      return;
-    }
+      const response = await fetch("/api/line/room");
 
-    const result = await response.json();
-
-    const roomMap: Record<
-      string,
-      LineChatRoomInterface
-    > = {};
-
-    for (const room of result.data) {
-      const messages: LineChatMessageInterface[] = [];
-
-      if (room.latestMessage) {
-        const latestMessage =
-          room.latestMessage;
-
-        const message: LineChatMessageInterface = {
-          userId: room.userId,
-          type: latestMessage.messageType,
-          sender: latestMessage.sender,
-          timestamp: Number(
-            latestMessage.messageTimestamp,
-          ),
-        };
-
-        if (latestMessage.messageType === "text") {
-          message.text =
-            latestMessage.textContent;
-        } else if (
-          latestMessage.messageType === "image"
-        ) {
-          message.imageUrl =
-            latestMessage.mediaUrl;
-        } else if (
-          latestMessage.messageType === "video"
-        ) {
-          message.videoUrl =
-            latestMessage.mediaUrl;
-        } else if (
-          latestMessage.messageType === "file"
-        ) {
-          message.fileUrl =
-            latestMessage.mediaUrl;
-          message.fileName =
-            latestMessage.fileName;
-        } else if (
-          latestMessage.messageType === "sticker"
-        ) {
-          message.stickerPackageId =
-            latestMessage.stickerPackageId;
-          message.stickerId =
-            latestMessage.stickerId;
-        }
-
-        messages.push(message);
+      if (!response.ok) {
+        return;
       }
 
-      roomMap[room.userId] = {
-        userId: room.userId,
-        displayName: room.displayName,
-        pictureUrl: room.pictureUrl,
-        messages,
-      };
-    }
+      const result = await response.json();
 
-    setRooms(roomMap);
+      const roomMap: Record<
+        string,
+        LineChatRoomInterface
+      > = {};
+
+      for (const room of result.data) {
+        const messages: LineChatMessageInterface[] = [];
+
+        if (room.latestMessage) {
+          const latestMessage =
+            room.latestMessage;
+
+          const message: LineChatMessageInterface = {
+            userId: room.userId,
+            type: latestMessage.messageType,
+            sender: latestMessage.sender,
+            timestamp: Number(
+              latestMessage.messageTimestamp,
+            ),
+          };
+
+          if (latestMessage.messageType === "text") {
+            message.text =
+              latestMessage.textContent;
+          } else if (
+            latestMessage.messageType === "image"
+          ) {
+            message.imageUrl =
+              latestMessage.mediaUrl;
+          } else if (
+            latestMessage.messageType === "video"
+          ) {
+            message.videoUrl =
+              latestMessage.mediaUrl;
+          } else if (
+            latestMessage.messageType === "file"
+          ) {
+            message.fileUrl =
+              latestMessage.mediaUrl;
+            message.fileName =
+              latestMessage.fileName;
+          } else if (
+            latestMessage.messageType === "sticker"
+          ) {
+            message.stickerPackageId =
+              latestMessage.stickerPackageId;
+            message.stickerId =
+              latestMessage.stickerId;
+          }
+
+          messages.push(message);
+        }
+
+        roomMap[room.userId] = {
+          userId: room.userId,
+          displayName: room.displayName,
+          pictureUrl: room.pictureUrl,
+          messages,
+        };
+      }
+
+      setRooms(roomMap);
+    } catch (error) {
+      console.error("getRooms failed:", error);
+    } finally {
+      setIsRoomListLoading(false);
+    }
   }
 
   async function handleSelectRoom(
@@ -117,83 +123,89 @@ export default function Home() {
     await getMessages(userId);
   }
 
-  async function getMessages(
-    userId: string,
-  ) {
-    const response = await fetch(
-      `/api/line/message?userId=${userId}`,
-    );
+  async function getMessages(userId: string) {
+    try {
+      setIsChatRoomLoading(true);
 
-    if (!response.ok) {
-      return;
-    }
-
-    const result = await response.json();
-
-    const messages: LineChatMessageInterface[] =
-      result.data.map(
-        (message: any) => {
-          const data: LineChatMessageInterface = {
-            userId,
-            type: message.messageType,
-            timestamp: Number(
-              message.messageTimestamp,
-            ),
-            sender: message.sender,
-          };
-
-          if (message.messageType === "text") {
-            data.text = message.textContent;
-          } else if (
-            message.messageType === "image"
-          ) {
-            data.imageUrl = message.mediaUrl;
-          } else if (
-            message.messageType === "video"
-          ) {
-            data.videoUrl = message.mediaUrl;
-          } else if (
-            message.messageType === "file"
-          ) {
-            data.fileUrl = message.mediaUrl;
-            data.fileName = message.fileName;
-          } else if (
-            message.messageType === "sticker"
-          ) {
-            data.stickerPackageId =
-              message.stickerPackageId;
-
-            data.stickerId =
-              message.stickerId;
-          }
-
-          return data;
-        },
+      const response = await fetch(
+        `/api/line/message?userId=${userId}`,
       );
 
-    setRooms((current) => {
-      const room = current[userId];
-
-      if (!room) {
-        return current;
+      if (!response.ok) {
+        return;
       }
 
-      return {
-        ...current,
+      const result = await response.json();
 
-        [userId]: {
-          ...room,
-          messages,
-        },
-      };
-    });
+      const messages: LineChatMessageInterface[] =
+        result.data.map(
+          (message: any) => {
+            const data: LineChatMessageInterface = {
+              userId,
+              type: message.messageType,
+              timestamp: Number(
+                message.messageTimestamp,
+              ),
+              sender: message.sender,
+            };
+
+            if (message.messageType === "text") {
+              data.text = message.textContent;
+            } else if (
+              message.messageType === "image"
+            ) {
+              data.imageUrl = message.mediaUrl;
+            } else if (
+              message.messageType === "video"
+            ) {
+              data.videoUrl = message.mediaUrl;
+            } else if (
+              message.messageType === "file"
+            ) {
+              data.fileUrl = message.mediaUrl;
+              data.fileName = message.fileName;
+            } else if (
+              message.messageType === "sticker"
+            ) {
+              data.stickerPackageId =
+                message.stickerPackageId;
+
+              data.stickerId =
+                message.stickerId;
+            }
+
+            return data;
+          },
+        );
+
+      setRooms((current) => {
+        const room = current[userId];
+
+        if (!room) {
+          return current;
+        }
+
+        return {
+          ...current,
+
+          [userId]: {
+            ...room,
+            messages,
+          },
+        };
+      });
+    } catch (error) {
+      console.error("getMessages failed:", error);
+    } finally {
+      setIsChatRoomLoading(false);
+    }
   }
 
   async function replyMessage() {
     if (
       !selectedUserId ||
       !text.trim() ||
-      isReplying
+      isChatRoomLoading
     ) {
       return;
     }
@@ -201,7 +213,7 @@ export default function Home() {
     const messageText = text.trim();
 
     try {
-      setIsReplying(true);
+      setIsChatRoomLoading(true);
 
       const response = await fetch(
         "/api/line/reply",
@@ -223,8 +235,10 @@ export default function Home() {
       }
 
       setText("");
+    } catch (error) {
+      console.error("replyMessage failed:", error);
     } finally {
-      setIsReplying(false);
+      setIsChatRoomLoading(false);
     }
   }
 
@@ -284,13 +298,14 @@ export default function Home() {
       <ChatRoomList
         rooms={rooms}
         selectedUserId={selectedUserId}
+        isLoading={isRoomListLoading}
         onSelectRoom={handleSelectRoom}
       />
 
       <ChatRoom
         room={selectedRoom}
         text={text}
-        isReplying={isReplying}
+        isLoading={isChatRoomLoading}
         onChangeText={setText}
         onReplyMessage={replyMessage}
       />
