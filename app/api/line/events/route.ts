@@ -1,5 +1,4 @@
-import { LineChatMessageInterface } from "@/app/interface";
-import { lineService } from "@/app/services/line.service";
+import { createClient } from "redis";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -7,30 +6,30 @@ export const runtime = "nodejs";
 export async function GET() {
   const encoder = new TextEncoder();
 
-  let listener: ((message: LineChatMessageInterface) => void) | undefined;
+  const subscriber = createClient({
+    url: process.env.REDIS_URL,
+  });
+
+  subscriber.on("error", (error) => {
+    console.error("Redis Subscriber Error:", error);
+  });
 
   const stream = new ReadableStream({
-    start(controller) {
-      controller.enqueue(encoder.encode(`: connected\n\n`));
+    async start(controller) {
+      if (!subscriber.isOpen) {
+        await subscriber.connect();
+      }
 
-      listener = (message: LineChatMessageInterface) => {
-        const data = `data: ${JSON.stringify(message)}\n\n`;
-
-        console.log("SSE SEND", message.type, data.length);
-
-        controller.enqueue(encoder.encode(data));
-
-        controller.enqueue(encoder.encode(`: flush\n\n`));
-
-        console.log("SSE SENT", message.type);
-      };
-
-      lineService.onMessage(listener);
+      await subscriber.subscribe("chat-message", (message) => {
+        controller.enqueue(encoder.encode(`data: ${message}\n\n`));
+      });
     },
 
-    cancel() {
-      if (listener) {
-        lineService.offMessage(listener);
+    async cancel() {
+      if (subscriber.isOpen) {
+        await subscriber.unsubscribe("chat-message");
+
+        await subscriber.quit();
       }
     },
   });

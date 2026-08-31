@@ -1,15 +1,7 @@
 import { webhook, messagingApi } from "@line/bot-sdk";
-import { EventEmitter } from "node:events";
 import { LineChatMessageInterface } from "../interface";
 import { ChatMessageRepository, ChatRoomRepository } from "../repository";
-
-const globalForLine = globalThis as unknown as {
-  lineEmitter?: EventEmitter;
-};
-
-const lineEmitter = globalForLine.lineEmitter ?? new EventEmitter();
-
-globalForLine.lineEmitter = lineEmitter;
+import { redisPublisher } from "@/app/lib/redis";
 
 class LineService {
   private client?: messagingApi.MessagingApiClient;
@@ -185,15 +177,10 @@ class LineService {
 
     await this.saveMessage(room.userId, dataEmit, event.message.id);
 
-    lineEmitter.emit("message", dataEmit);
-  }
-
-  onMessage(listener: (message: LineChatMessageInterface) => void) {
-    lineEmitter.on("message", listener);
-  }
-
-  offMessage(listener: (message: LineChatMessageInterface) => void) {
-    lineEmitter.off("message", listener);
+    const subscriberCount = await redisPublisher.publish(
+      "chat-message",
+      JSON.stringify(dataEmit),
+    );
   }
 
   async replyUser(userId: string, text: string) {
@@ -224,6 +211,8 @@ class LineService {
     };
 
     await this.saveMessage(room.userId, message);
+
+    await redisPublisher.publish("chat-message", JSON.stringify(message));
   }
 
   private async createRoom(
