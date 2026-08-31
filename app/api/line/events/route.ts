@@ -25,7 +25,14 @@ export async function GET() {
           "subscriber chat-message",
           JSON.stringify(message).substring(0, 500),
         );
+
+        const data = `data: ${message}\n\n`;
+
+        console.log("SSE BEFORE ENQUEUE", Buffer.byteLength(data, "utf8"));
+
         controller.enqueue(encoder.encode(`data: ${message}\n\n`));
+
+        console.log("SSE AFTER ENQUEUE");
       });
     },
 
