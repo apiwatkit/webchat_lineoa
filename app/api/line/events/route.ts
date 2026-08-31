@@ -1,10 +1,12 @@
 import { LineChatMessageInterface } from "@/app/interface";
 import { lineService } from "@/app/services/line.service";
+import { INSTANCE_ID } from "@/app/lib/instance-id";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET() {
+  console.log("SSE INSTANCE:", INSTANCE_ID);
   const encoder = new TextEncoder();
 
   let listener: ((message: LineChatMessageInterface) => void) | undefined;
@@ -15,14 +17,8 @@ export async function GET() {
 
       listener = (message: LineChatMessageInterface) => {
         const data = `data: ${JSON.stringify(message)}\n\n`;
-
-        console.log("SSE SEND", message.type, data.length);
-
         controller.enqueue(encoder.encode(data));
-
         controller.enqueue(encoder.encode(`: flush\n\n`));
-
-        console.log("SSE SENT", message.type);
       };
 
       lineService.onMessage(listener);

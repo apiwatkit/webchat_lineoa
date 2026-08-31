@@ -2,6 +2,7 @@ import { webhook, messagingApi } from "@line/bot-sdk";
 import { EventEmitter } from "node:events";
 import { LineChatMessageInterface } from "../interface";
 import { ChatMessageRepository, ChatRoomRepository } from "../repository";
+import { INSTANCE_ID } from "../lib/instance-id";
 
 const globalForLine = globalThis as unknown as {
   lineEmitter?: EventEmitter;
@@ -10,6 +11,8 @@ const globalForLine = globalThis as unknown as {
 const lineEmitter = globalForLine.lineEmitter ?? new EventEmitter();
 
 globalForLine.lineEmitter = lineEmitter;
+
+console.log("LINE SERVICE INSTANCE:", INSTANCE_ID);
 
 class LineService {
   private client?: messagingApi.MessagingApiClient;
@@ -184,6 +187,8 @@ class LineService {
     }
 
     await this.saveMessage(room.userId, dataEmit, event.message.id);
+
+    console.log("EMIT INSTANCE:", INSTANCE_ID, dataEmit.type);
 
     lineEmitter.emit("message", dataEmit);
   }
