@@ -21,6 +21,10 @@ export async function GET() {
       }
 
       await subscriber.subscribe("chat-message", (message) => {
+        console.log(
+          "subscriber chat-message",
+          JSON.stringify(message).substring(0, 500),
+        );
         controller.enqueue(encoder.encode(`data: ${message}\n\n`));
       });
     },
