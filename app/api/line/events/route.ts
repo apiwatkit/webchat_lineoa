@@ -21,15 +21,11 @@ export async function GET() {
       }
 
       await subscriber.subscribe("chat-message", (message) => {
-        console.log(
-          "REDIS RECEIVED",
-          "bytes:",
-          Buffer.byteLength(message, "utf8"),
-        );
+        const bytes = Buffer.byteLength(message, "utf8");
 
         controller.enqueue(encoder.encode(`data: ${message}\n\n`));
 
-        console.log("SSE AFTER ENQUEUE");
+        console.log("REDIS RECEIVED + SSE ENQUEUED", "bytes:", bytes);
       });
     },
 
