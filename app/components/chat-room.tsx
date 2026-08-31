@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 interface Props {
   room?: LineChatRoomInterface;
   text: string;
-  isReplying: boolean;
+  isLoading: boolean;
 
   onChangeText: (text: string) => void;
   onReplyMessage: () => void;
@@ -15,7 +15,7 @@ interface Props {
 export default function ChatRoom({
   room,
   text,
-  isReplying,
+  isLoading,
   onChangeText,
   onReplyMessage,
 }: Props) {
@@ -114,8 +114,46 @@ export default function ChatRoom({
           padding: "20px",
           overflowY: "auto",
           background: "#f5f5f5",
+          position: "relative",
         }}
       >
+
+        {isLoading && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 10,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              background: "rgba(245, 245, 245, 0.75)",
+            }}
+          >
+            <div
+              className="loading-spinner"
+              style={{
+                width: "28px",
+                height: "28px",
+                border: "3px solid #ddd",
+                borderTopColor: "#555",
+                borderRadius: "50%",
+              }}
+            />
+
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#888",
+              }}
+            >
+              Loading...
+            </div>
+          </div>
+        )}
+
         {!room && (
           <div
             style={{
@@ -295,10 +333,10 @@ export default function ChatRoom({
           disabled={
             !room ||
             !text.trim() ||
-            isReplying
+            isLoading
           }
         >
-          {isReplying ? "Replying..." : "Reply"}
+          {isLoading ? "Replying..." : "Reply"}
         </button>
       </div>
     </div>
