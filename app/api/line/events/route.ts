@@ -24,8 +24,6 @@ export async function GET() {
         const bytes = Buffer.byteLength(message, "utf8");
 
         controller.enqueue(encoder.encode(`data: ${message}\n\n`));
-
-        console.log("REDIS RECEIVED + SSE ENQUEUED", "bytes:", bytes);
       });
     },
 

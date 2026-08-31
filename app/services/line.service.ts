@@ -2,6 +2,7 @@ import { webhook, messagingApi } from "@line/bot-sdk";
 import { LineChatMessageInterface } from "../interface";
 import { ChatMessageRepository, ChatRoomRepository } from "../repository";
 import { redisPublisher } from "@/app/lib/redis";
+import { put } from "@vercel/blob";
 
 class LineService {
   private client?: messagingApi.MessagingApiClient;
@@ -56,7 +57,10 @@ class LineService {
     }
   }
 
-  private async getLineContent(messageId: string): Promise<string | null> {
+  private async getLineContent(messageId: string): Promise<{
+    buffer: Buffer;
+    contentType: string;
+  } | null> {
     try {
       const client = this.getBlobClient();
 
@@ -74,10 +78,44 @@ class LineService {
       const contentType =
         httpResponse.headers.get("content-type") ?? "application/octet-stream";
 
-      return `data:${contentType};base64,${buffer.toString("base64")}`;
+      return {
+        buffer,
+        contentType,
+      };
     } catch (error) {
       console.error("Error getLineContent:", error);
 
+      return null;
+    }
+  }
+
+  private async uploadToBlobStorage(
+    messageId: string,
+    buffer: Buffer,
+    contentType: string,
+    fileName?: string,
+  ): Promise<string | null> {
+    try {
+      let extension = "";
+
+      if (fileName?.includes(".")) {
+        extension = fileName.split(".").pop() ?? "";
+      } else if (contentType.includes("/")) {
+        extension = contentType.split("/")[1];
+      }
+
+      const pathname = extension
+        ? `line/${messageId}.${extension}`
+        : `line/${messageId}`;
+
+      const blob = await put(pathname, buffer, {
+        access: "public",
+        contentType,
+      });
+
+      return blob.url;
+    } catch (error) {
+      console.error("Error uploadToBlobStorage:", error);
       return null;
     }
   }
@@ -126,7 +164,17 @@ class LineService {
         text: event.message.text,
       };
     } else if (event.message.type === "image") {
-      const imageUrl = await this.getLineContent(event.message.id);
+      const lineContent = await this.getLineContent(event.message.id);
+
+      if (!lineContent) {
+        return;
+      }
+
+      const imageUrl = await this.uploadToBlobStorage(
+        event.message.id,
+        lineContent.buffer,
+        lineContent.contentType,
+      );
 
       if (!imageUrl) {
         return;
@@ -138,7 +186,17 @@ class LineService {
         imageUrl,
       };
     } else if (event.message.type === "video") {
-      const videoUrl = await this.getLineContent(event.message.id);
+      const lineContent = await this.getLineContent(event.message.id);
+
+      if (!lineContent) {
+        return;
+      }
+
+      const videoUrl = await this.uploadToBlobStorage(
+        event.message.id,
+        lineContent.buffer,
+        lineContent.contentType,
+      );
 
       if (!videoUrl) {
         return;
@@ -150,7 +208,17 @@ class LineService {
         videoUrl,
       };
     } else if (event.message.type === "file") {
-      const fileUrl = await this.getLineContent(event.message.id);
+      const lineContent = await this.getLineContent(event.message.id);
+
+      if (!lineContent) {
+        return;
+      }
+
+      const fileUrl = await this.uploadToBlobStorage(
+        event.message.id,
+        lineContent.buffer,
+        lineContent.contentType,
+      );
 
       if (!fileUrl) {
         return;
@@ -180,15 +248,6 @@ class LineService {
     const subscriberCount = await redisPublisher.publish(
       "chat-message",
       JSON.stringify(dataEmit),
-    );
-
-    console.log(
-      "REDIS PUBLISHED",
-      dataEmit.type,
-      "subscribers:",
-      subscriberCount,
-      "bytes:",
-      Buffer.byteLength(JSON.stringify(dataEmit), "utf8"),
     );
   }
 
