@@ -181,6 +181,11 @@ class LineService {
       "chat-message",
       JSON.stringify(dataEmit),
     );
+
+    console.log(
+      "subscriberCount chat-message",
+      JSON.stringify(dataEmit).substring(0, 500),
+    );
   }
 
   async replyUser(userId: string, text: string) {
