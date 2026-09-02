@@ -155,7 +155,6 @@ export default function ChatRoomList({
                   <div
                     style={{
                       marginTop: "5px",
-                      color: "#777",
                       fontSize: "13px",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
